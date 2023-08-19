@@ -6,20 +6,23 @@ import { callOpenAI } from '@/utils/openai';
 
 export default function Home() {
 
-  const [response, setResponse] = useState<string | null>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
   const weightRef = useRef<HTMLInputElement>(null);
   const heightRef = useRef<HTMLInputElement>(null);
   const animalRef = useRef<HTMLInputElement>(null);
   // ... other refs for each input
 
   const [loading, setLoading] = useState(false);
+  const [response, setResponse] = useState<string | null>(null);
+  const [story, setStory] = useState<string | null>(null);
   const [winner, setWinner] = useState<string | null>(null);
 
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
 
-    if (weightRef.current && heightRef.current && animalRef.current) {
+    if (nameRef.current && weightRef.current && heightRef.current && animalRef.current) {
+      const name = nameRef.current.value;
       const weight = weightRef.current.value;
       const height = heightRef.current.value;
       const animal = animalRef.current.value;
@@ -29,18 +32,20 @@ export default function Home() {
       console.log('Animal:', animal);
 
 
-      /*const initialPromptJSON = {
-        'role': 'Result Generator',
+      const initialPromptJSON = {
+        'role': ' Hypothetical Fight Result Generator',
         'animal': animal,
-        'human_weight': weight,
-        'human_height': height,
+        'your_weight': weight,
+        'your_height': height,
         'rules': [
-          `1. Determine how a person weighing ${weight} and having a height of ${height} would fare against a ${animal}`,
-        ]
+          `1. Write between 1 and 3 sentences.`,
+          `2. You must come up with a definitive result.`
+        ],
+        'prompt': `How would you, weighing ${weight} and standing at ${height}, fare against a ${animal}?`
       };
-      const initialPrompt = JSON.stringify(initialPromptJSON);*/
+      const initialPrompt = JSON.stringify(initialPromptJSON);
 
-      const initialPrompt = `Hypothetically, If I weighed ${weight} and measure ${height}, how would I fare in a fight against a ${animal}?`;
+      //const initialPrompt = `Hypothetically, If I weighed ${weight} and measure ${height}, how would I fare in a fight against a ${animal}?`;
 
       /*const messages1 = [
         { "role": "system", "content": initialPrompt },
@@ -49,17 +54,51 @@ export default function Home() {
       setLoading(true);
 
       try {
-        const firstResult = await callOpenAI(initialPrompt, "gpt-4-0613");
+        const firstResult = await callOpenAI(initialPrompt);
         setResponse(firstResult);
 
         // Based on the firstResult, construct a new prompt
-        const winnerPrompt = `Considering the result: "${firstResult}", who would be the winner, the human or the ${animal}?`;
+
+        const storyPromptJSON = {
+          'role': 'Fight Encounter Generator',
+          'animal': animal,
+          'human_name': name,
+            'human_weight': weight,
+          'human_height': height,
+          'initial_result': firstResult,
+          'rules': [
+            `1. Use the initial result to write how the encounter would play out.`,
+            `2. Make it entertaining and engaging.`,
+            `3. The encounter should be no longer than a paragraph.`
+          ],
+          'prompt': `Write a short encounter of how the fight would play out in third person."`
+        };
+        const storyPrompt = JSON.stringify(storyPromptJSON);
+        const storyResult = await callOpenAI(storyPrompt);
+        // Assuming you want to show this story result, you might want to create another state variable like 'setStory'
+        setStory(storyResult);
+
+        const WinnerPromptJSON = {
+          'role': ' Winner Selector',
+          'animal': animal,
+          'human_weight': weight,
+          'human_height': height,
+          'result': firstResult,
+          'rules': [
+            `1. Either print "You" or the Animal name, with no extra text/tokens for context.`,
+          ],
+          'prompt': `Based on the previous outcome, who won: You or the ${animal}? Remember, only output "You" or the name of the animal as your answer.`
+        };
+
+        const winnerPrompt = JSON.stringify(WinnerPromptJSON);
+
+        //const winnerPrompt = `Considering the result: "${firstResult}", who would be the winner, the human or the ${animal}?`;
 
         /*const messages2 = [
           { "role": "system", "content": initialPrompt },
         ];*/
 
-        const winnerResult = await callOpenAI(winnerPrompt, "gpt-4-0613");
+        const winnerResult = await callOpenAI(winnerPrompt);
         setWinner(winnerResult);
 
       } catch (error) {
@@ -86,7 +125,11 @@ export default function Home() {
             {/* Column 1 */}
             <div>
               <h2 className="mb-4 text-xl font-bold text-center">You</h2>
-              <div>
+              <div className="mt-4">
+                <label className="block mb-2 text-sm font-medium">Your Name</label>
+                <input ref={nameRef} type="text" className="p-2 border rounded text-black" placeholder="Enter name..." />
+              </div>
+              <div className="mt-4">
                 <label className="block mb-2 text-sm font-medium">Your Weight</label>
                 <input ref={weightRef} type="text" className="p-2 border rounded text-black" placeholder="Enter weight..." />
               </div>
@@ -115,6 +158,12 @@ export default function Home() {
             <div className="mt-4 text-center">
               <h3 className="font-medium text-lg">Result</h3>
               <p>{response}</p>
+            </div>
+          )}
+          {story && (
+            <div className="mt-4 text-center">
+              <h3 className="font-medium text-lg">Encounter</h3>
+              <p>{story}</p>
             </div>
           )}
           {winner && (
