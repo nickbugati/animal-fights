@@ -2,9 +2,11 @@ const API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
 
 export async function callOpenAI(
     prompt: string,
-    { model = 'text-davinci-002', temperature = 0.7 } = {}
+    model: string = 'gpt-3.5-turbo',
+    temperature: number = 0.7
 ): Promise<string> {
-    const OPENAI_API_URL = `https://api.openai.com/v1/engines/${model}/completions`;
+
+    const OPENAI_API_URL = `https://api.openai.com/v1/chat/completions`;
 
     const headers = {
         'Authorization': `Bearer ${API_KEY}`,
@@ -13,8 +15,11 @@ export async function callOpenAI(
     };
 
     const requestBody = {
-        prompt: prompt,
-        max_tokens: 150, // Set your desired token count or other parameters here
+        model: model,
+        messages: [{
+            role: "user",
+            content: prompt
+        }],
         temperature: temperature
     };
 
@@ -25,9 +30,10 @@ export async function callOpenAI(
     });
 
     if (!response.ok) {
-        throw new Error(`OpenAI API call failed: ${response.statusText}`);
+        const errorDetail = await response.text();
+        throw new Error(`OpenAI API call failed: ${response.statusText}. Details: ${errorDetail}`);
     }
 
     const responseBody = await response.json();
-    return responseBody.choices[0].text.trim();
+    return responseBody.choices[0].message.content.trim();
 }

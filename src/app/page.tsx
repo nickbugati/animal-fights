@@ -16,23 +16,50 @@ export default function Home() {
   const [winner, setWinner] = useState<string | null>(null);
 
 
-  async function handleSubmit() {
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+
     if (weightRef.current && heightRef.current && animalRef.current) {
       const weight = weightRef.current.value;
       const height = heightRef.current.value;
       const animal = animalRef.current.value;
 
-      const initialPrompt = `Based on a person weighing ${weight} and having a height of ${height}, how would they fare against a ${animal}?`;
+      console.log('Weight:', weight);
+      console.log('Height:', height);
+      console.log('Animal:', animal);
+
+
+      /*const initialPromptJSON = {
+        'role': 'Result Generator',
+        'animal': animal,
+        'human_weight': weight,
+        'human_height': height,
+        'rules': [
+          `1. Determine how a person weighing ${weight} and having a height of ${height} would fare against a ${animal}`,
+        ]
+      };
+      const initialPrompt = JSON.stringify(initialPromptJSON);*/
+
+      const initialPrompt = `Hypothetically, If I weighed ${weight} and measure ${height}, how would I fare in a fight against a ${animal}?`;
+
+      /*const messages1 = [
+        { "role": "system", "content": initialPrompt },
+      ];*/
+
       setLoading(true);
 
       try {
-        const firstResult = await callOpenAI(initialPrompt);
+        const firstResult = await callOpenAI(initialPrompt, "gpt-4-0613");
         setResponse(firstResult);
 
         // Based on the firstResult, construct a new prompt
         const winnerPrompt = `Considering the result: "${firstResult}", who would be the winner, the human or the ${animal}?`;
 
-        const winnerResult = await callOpenAI(winnerPrompt);
+        /*const messages2 = [
+          { "role": "system", "content": initialPrompt },
+        ];*/
+
+        const winnerResult = await callOpenAI(winnerPrompt, "gpt-4-0613");
         setWinner(winnerResult);
 
       } catch (error) {
