@@ -1,6 +1,51 @@
+"use client"
 import Image from 'next/image'
+import React, { useState, useRef } from 'react';
+import { callOpenAI } from '@/utils/openai';
+
 
 export default function Home() {
+
+  const [response, setResponse] = useState<string | null>(null);
+  const weightRef = useRef<HTMLInputElement>(null);
+  const heightRef = useRef<HTMLInputElement>(null);
+  const animalRef = useRef<HTMLInputElement>(null);
+  // ... other refs for each input
+
+  const [loading, setLoading] = useState(false);
+  const [winner, setWinner] = useState<string | null>(null);
+
+
+  async function handleSubmit() {
+    if (weightRef.current && heightRef.current && animalRef.current) {
+      const weight = weightRef.current.value;
+      const height = heightRef.current.value;
+      const animal = animalRef.current.value;
+
+      const initialPrompt = `Based on a person weighing ${weight} and having a height of ${height}, how would they fare against a ${animal}?`;
+      setLoading(true);
+
+      try {
+        const firstResult = await callOpenAI(initialPrompt);
+        setResponse(firstResult);
+
+        // Based on the firstResult, construct a new prompt
+        const winnerPrompt = `Considering the result: "${firstResult}", who would be the winner, the human or the ${animal}?`;
+
+        const winnerResult = await callOpenAI(winnerPrompt);
+        setWinner(winnerResult);
+
+      } catch (error) {
+        console.error("Error calling OpenAI:", error);
+        setResponse("Error getting response.");
+        setWinner(null);
+      }
+
+      setLoading(false);
+    }
+  }
+
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
       <div className="max-w-5xl w-full text-center font-mono text-sm mb-8">
@@ -16,11 +61,11 @@ export default function Home() {
               <h2 className="mb-4 text-xl font-bold text-center">You</h2>
               <div>
                 <label className="block mb-2 text-sm font-medium">Your Weight</label>
-                <input type="text" className="p-2 border rounded text-black" placeholder="Enter weight..." />
+                <input ref={weightRef} type="text" className="p-2 border rounded text-black" placeholder="Enter weight..." />
               </div>
               <div className="mt-4">
                 <label className="block mb-2 text-sm font-medium">Your Height</label>
-                <input type="text" className="p-2 border rounded text-black" placeholder="Enter height..." />
+                <input ref={heightRef} type="text" className="p-2 border rounded text-black" placeholder="Enter height..." />
               </div>
             </div>
 
@@ -29,15 +74,30 @@ export default function Home() {
               <h2 className="mb-4 text-xl font-bold text-center">Animal</h2>
               <div>
                 <label className="block mb-2 text-sm font-medium">Animal</label>
-                <input type="text" className="p-2 border rounded text-black" placeholder="Enter animal weight..." />
+                <input ref={animalRef} type="text" className="p-2 border rounded text-black" placeholder="Enter animal weight..." />
               </div>
             </div>
           </div>
         </div>
 
         <div className="text-center mt-6">
-          <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 focus:outline-none focus:bg-blue-700">Submit</button>
+          <button onClick={handleSubmit} className="mt-4 p-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50" disabled={loading}>
+            Submit
+          </button>
+          {response && (
+            <div className="mt-4 text-center">
+              <h3 className="font-medium text-lg">Result</h3>
+              <p>{response}</p>
+            </div>
+          )}
+          {winner && (
+            <div className="mt-4 text-center">
+              <h3 className="font-medium text-lg">Winner</h3>
+              <p>{winner}</p>
+            </div>
+          )}
         </div>
+
       </form>
     </main>
   )
