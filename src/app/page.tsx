@@ -27,11 +27,6 @@ export default function Home() {
       const height = heightRef.current.value;
       const animal = animalRef.current.value;
 
-      console.log('Weight:', weight);
-      console.log('Height:', height);
-      console.log('Animal:', animal);
-
-
       const initialPromptJSON = {
         'role': ' Hypothetical Fight Result Generator',
         'animal': animal,
@@ -89,7 +84,6 @@ export default function Home() {
           ],
           'prompt': `Based on the previous outcome, who won: You or the ${animal}? Remember, only output "You" or the name of the animal as your answer.`
         };
-
         const winnerPrompt = JSON.stringify(WinnerPromptJSON);
 
         //const winnerPrompt = `Considering the result: "${firstResult}", who would be the winner, the human or the ${animal}?`;
