@@ -1,19 +1,26 @@
-const API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+let API_KEY: string | null = null;
+
+const OPENAI_API_URL = `https://api.openai.com/v1/chat/completions`;
+
+function getHeaders() {
+    console.log(API_KEY);
+    return {
+        'Authorization': `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+    };
+}
+
+// Function to update the API key
+export function setAPIKey(key: string | null) {
+    API_KEY = key;
+}
 
 export async function callOpenAI(
     prompt: string,
     model: string = 'gpt-3.5-turbo',
     temperature: number = 0.7
 ): Promise<string> {
-
-    const OPENAI_API_URL = `https://api.openai.com/v1/chat/completions`;
-
-    const headers = {
-        'Authorization': `Bearer ${API_KEY}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-    };
-
     const requestBody = {
         model: model,
         messages: [{
@@ -25,7 +32,7 @@ export async function callOpenAI(
 
     const response = await fetch(OPENAI_API_URL, {
         method: 'POST',
-        headers: headers,
+        headers: getHeaders(),  // Use the function here
         body: JSON.stringify(requestBody)
     });
 

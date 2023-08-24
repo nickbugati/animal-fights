@@ -1,8 +1,7 @@
 "use client"
 import Image from 'next/image'
 import React, { useState, useRef } from 'react';
-import { callOpenAI } from '@/utils/openai';
-
+import { callOpenAI, setAPIKey } from '@/utils/openai';
 
 export default function Home() {
 
@@ -17,6 +16,30 @@ export default function Home() {
   const [story, setStory] = useState<string | null>(null);
   const [winner, setWinner] = useState<string | null>(null);
 
+  const [apiKeyVerified, setApiKeyVerified] = useState<boolean>(false);
+  const apiKeyRef = useRef<HTMLInputElement>(null);
+
+  async function handleApiKeySubmit(event: React.FormEvent) {
+    event.preventDefault();
+
+    if (apiKeyRef.current) {
+      const inputApiKey = apiKeyRef.current.value;
+
+      // Set the API key first
+      setAPIKey(inputApiKey);
+
+      try {
+        // Now try to verify it
+        await callOpenAI("Hello! Please verify this API key.");
+
+        // Mark the key as verified if no exceptions occur
+        setApiKeyVerified(true);
+
+      } catch (error) {
+        alert("Invalid API Key. Please try again.");
+      }
+    }
+  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -58,7 +81,7 @@ export default function Home() {
           'role': 'Fight Encounter Generator',
           'animal': animal,
           'human_name': name,
-            'human_weight': weight,
+          'human_weight': weight,
           'human_height': height,
           'initial_result': firstResult,
           'rules': [
@@ -74,7 +97,7 @@ export default function Home() {
         setStory(storyResult);
 
         const WinnerPromptJSON = {
-          'role': ' Winner Selector',
+          'role': 'Winner Selector',
           'animal': animal,
           'human_weight': weight,
           'human_height': height,
@@ -105,6 +128,23 @@ export default function Home() {
     }
   }
 
+  if (!apiKeyVerified) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center p-24">
+        <h1 className="mb-4 text-xl font-bold">Enter Your API Key</h1>
+        <form onSubmit={handleApiKeySubmit} className="w-full max-w-md">
+          <div className="mt-4">
+            <input ref={apiKeyRef} type="text" className="p-2 border rounded text-black w-full" placeholder="API Key..." />
+          </div>
+          <div className="text-center mt-6">
+            <button type="submit" className="mt-4 p-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+              Submit
+            </button>
+          </div>
+        </form>
+      </main>
+    );
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
@@ -113,7 +153,7 @@ export default function Home() {
         <p>How do you fare against different creatures?</p>
       </div>
 
-      <form className="w-full">
+      <form onSubmit={handleSubmit} className="w-full">
         <div className="mb-32 w-full flex justify-center">
           <div className="grid grid-cols-2 gap-20 lg:max-w-5xl">
             {/* Column 1 */}
@@ -138,14 +178,14 @@ export default function Home() {
               <h2 className="mb-4 text-xl font-bold text-center">Animal</h2>
               <div>
                 <label className="block mb-2 text-sm font-medium">Animal</label>
-                <input ref={animalRef} type="text" className="p-2 border rounded text-black" placeholder="Enter animal weight..." />
+                <input ref={animalRef} type="text" className="p-2 border rounded text-black" placeholder="Enter animal name..." />
               </div>
             </div>
           </div>
         </div>
 
         <div className="text-center mt-6">
-          <button onClick={handleSubmit} className="mt-4 p-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50" disabled={loading}>
+          <button type="submit" className="mt-4 p-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50" disabled={loading}>
             Submit
           </button>
           {response && (
