@@ -188,6 +188,13 @@ export default function Home() {
           <button type="submit" className="mt-4 p-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50" disabled={loading}>
             Submit
           </button>
+
+          {loading && (
+            <div className="flex flex-grow justify-center items-center mt-4">
+              <div className="spinner"></div>
+            </div>
+          )}
+
           {response && (
             <div className="mt-4 text-center">
               <h3 className="font-medium text-lg">Result</h3>
@@ -209,6 +216,6 @@ export default function Home() {
         </div>
 
       </form>
-    </main>
+    </main >
   )
 }
