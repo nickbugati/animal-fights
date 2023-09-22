@@ -134,7 +134,7 @@ export default function Home() {
         <h1 className="mb-4 text-xl font-bold">Enter Your API Key</h1>
         <form onSubmit={handleApiKeySubmit} className="w-full max-w-md">
           <div className="mt-4">
-            <input ref={apiKeyRef} type="text" className="p-2 border rounded text-black w-full" placeholder="API Key..." />
+            <input ref={apiKeyRef} type="password" className="p-2 border rounded text-black w-full" placeholder="API Key..." />
           </div>
           <div className="text-center mt-6">
             <button type="submit" className="mt-4 p-2 bg-blue-500 text-white rounded hover:bg-blue-600">
